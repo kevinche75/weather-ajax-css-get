@@ -1,0 +1,174 @@
+<html lang="ru-RU">
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+    <title>
+        Weather
+    </title>
+    <link rel="stylesheet" type="text/css" href="weather.css">
+    <link rel="stylesheet" type="text/css" href="loading.css">
+    <style>
+        .line{
+            width: 100%;
+            float: none;
+            height: 10%;
+            margin-top: 5%;
+            position: absolute;
+        }
+        body{
+            background-color: #44a3fc;
+        }
+        header{
+            font-size: 100pt;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
+        .stormy, .cloudy, .rainy, .snowy, .rainbow{
+            margin-left: 15%;
+        }
+        .sunny, .starry{
+            margin-left: 49% !important;
+        }
+        .spinner{
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        #first_line{
+            margin-top: 50px;
+        }
+        #second_line{
+            margin-top: 100px;
+        }
+        #first_line div:first-child{
+            margin-left: 28%;
+        }
+        #second_line div:first-child{
+            margin-left: 37%;
+        }
+        #super_button{
+            margin-top: 230px;
+            color: white;
+            background: #44a3fc;
+            border: 2px solid #44a3fc;
+            font-size: 45pt;
+            text-align: center;
+            font-weight: bold;
+            float: none;
+            position: center;
+            height: 90px;
+            width: 450px;
+        }
+        #super_button:hover{
+            box-shadow: 0 0 0 8px white;
+        }
+        .button{
+            text-align: center;
+        }
+        .information{
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            font-size: 30pt;
+        }
+    </style>
+</head>
+<body>
+<header>
+    WEATHER ONLINE
+</header>
+<div class = "background">
+    <div class = "line" id = "first_line">
+    </div>
+    <div class = "line" id="second_line">
+    </div>
+</div>
+<div class="button"><button id="super_button">SHOW</button></div>
+<div><p class="information" id="temperature"></p><p class="information" id="icon"></p></div>
+</body>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#super_button').click(function (e) {
+            e.preventDefault();
+            let x;
+            let y;
+            $('#first_line').empty();
+            $('#second_line').empty();
+            $('.information').empty();
+            $('#first_line').append('<div class="spinner"></div>');
+            if(navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    x = position.coords.latitude;
+                    y = position.coords.longitude;
+                    $.ajax({
+                        url: `https://api.darksky.net/forecast/02d950d704a3cd469064cfb4ea79f6fd/${x},${y}?exclude=daily,flags,hourly&units=auto`,
+                        type: "GET",
+                        jsonCallback: "jsonCallback:",
+                        contentType: "application/json",
+                        dataType: 'jsonp',
+
+                        success: function (json) {
+                          console.log(json);
+                          $('#first_line').empty();
+                          switch(json.currently.icon){
+                              case 'clear-day':
+                                  $('#first_line').append('<div class="sunny"></div>');
+                                  $('#second_line').append('<div class="rainbow"></div><div class="rainbow"></div>');
+                                  break;
+                              case 'clear-night':
+                                  $('#second_line').append('<div class="starry"></div>');
+                                  break;
+                              case 'partly-cloudy-night':
+                                  $('#second_line').append('<div class="starry"></div>');
+                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                              case 'rain':
+                                  $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                  $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                  break;
+                              case 'snow':
+                                  $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
+                                  $('#second_line').append('<div class="snowy"></div><div class="snowy"></div>');
+                                  break;
+                              case 'sleet':
+                                  $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
+                                  $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                  break;
+                              case 'wind':
+                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                              case 'fog':
+                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                              case 'cloudy':
+                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                              case 'partly-cloudy-day':
+                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                              case 'thunderstorm':
+                                  $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
+                                  $('#second_line').append('<div class="stormy"></div><div class="stormy"></div>');
+                                  break;
+                              default:
+                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                  break;
+                          }
+                          $('#icon').html(json.currently.icon.toUpperCase());
+                          $('#temperature').html(json.currently.temperature + '&#8451');
+                        },
+                        error: function(e){
+                            console.log(e.message);
+                        }
+                    })
+                })
+            } else {
+                alert("Для работы сайта нужно разрешение геопозиции")
+            }
+        })
+    })
+</script>
+</html>
