@@ -71,6 +71,19 @@
             color: white;
             font-size: 30pt;
         }
+        .textarea{
+            text-align: center;
+            margin-top: 30px;
+        }
+        #textarea_city{
+            border: none;
+            box-shadow: 0 0 0 5px #04819E;
+            width: 460px;
+            height: 25px;
+            font-size: 15pt;
+            font-weight: bold;
+            color: #206676;
+        }
     </style>
 </head>
 <body>
@@ -84,6 +97,7 @@
     </div>
 </div>
 <div class="button"><button id="super_button">SHOW</button></div>
+<div class="textarea"><form id="form" name="form"><input id="textarea_city" name="textarea_city"></form></div>
 <div><p class="information" id="temperature"></p><p class="information" id="icon"></p></div>
 </body>
 <script type="text/javascript">
@@ -96,78 +110,207 @@
             $('#second_line').empty();
             $('.information').empty();
             $('#first_line').append('<div class="spinner"></div>');
-            if(navigator.geolocation){
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    x = position.coords.latitude;
-                    y = position.coords.longitude;
-                    $.ajax({
-                        url: `https://api.darksky.net/forecast/02d950d704a3cd469064cfb4ea79f6fd/${x},${y}?exclude=daily,flags,hourly&units=auto`,
-                        type: "GET",
-                        jsonCallback: "jsonCallback:",
-                        contentType: "application/json",
-                        dataType: 'jsonp',
-
-                        success: function (json) {
-                          console.log(json);
-                          $('#first_line').empty();
-                          switch(json.currently.icon){
-                              case 'clear-day':
-                                  $('#first_line').append('<div class="sunny"></div>');
-                                  $('#second_line').append('<div class="rainbow"></div><div class="rainbow"></div>');
-                                  break;
-                              case 'clear-night':
-                                  $('#second_line').append('<div class="starry"></div>');
-                                  break;
-                              case 'partly-cloudy-night':
-                                  $('#second_line').append('<div class="starry"></div>');
-                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                              case 'rain':
-                                  $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
-                                  $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
-                                  break;
-                              case 'snow':
-                                  $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
-                                  $('#second_line').append('<div class="snowy"></div><div class="snowy"></div>');
-                                  break;
-                              case 'sleet':
-                                  $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
-                                  $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
-                                  break;
-                              case 'wind':
-                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                              case 'fog':
-                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
-                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                              case 'cloudy':
-                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
-                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                              case 'partly-cloudy-day':
-                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                              case 'thunderstorm':
-                                  $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
-                                  $('#second_line').append('<div class="stormy"></div><div class="stormy"></div>');
-                                  break;
-                              default:
-                                  $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
-                                  $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
-                                  break;
-                          }
-                          $('#icon').html(json.currently.icon.toUpperCase());
-                          $('#temperature').html(json.currently.temperature + '&#8451');
-                        },
-                        error: function(e){
-                            console.log(e.message);
+            let location;
+            let flag = false;
+            if($('#textarea_city').val().trim()!=''){
+                location = "city="+$('#textarea_city').val().trim();
+                request(location);
+            } else {
+                if(navigator.geolocation){
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        x = position.coords.latitude.toFixed(3);
+                        y = position.coords.longitude.toFixed(3);
+                        location = `lat=${x}&lon=${y}`;
+                        flag = true;
+                        request(location);
+                        }
+                    )
+                } else {
+                    alert("Specify the city or allow geolocation");
+                }
+            }
+            function request(location) {
+                $.get(`https://api.weatherbit.io/v2.0/current?${location}&key=dcf4674523194d32bad8cff6bbfc954b`)
+                    .done(function(data){
+                        console.log(data);
+                        $('#first_line').empty();
+                        if(data===undefined) $('#icon').html("NOT FOUND");
+                        else {
+                            if(data.data[0].weather.icon.endsWith("d")) {
+                                $('body').css("background","#44a3fc");
+                                $('#super_button').css("background","#44a3fc");
+                                $('#super_button').css("border","2px solid #44a3fc");
+                            }
+                            if(data.data[0].weather.icon.endsWith("n")) {
+                                $('body').css("background","#3D2D84");
+                                $('#super_button').css("background","#3D2D84");
+                                $('#super_button').css("border","2px solid #3D2D84");
+                            }
+                            switch (data.data[0].weather.icon) {
+                                case "t01d":
+                                case "t01n":
+                                    $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "t02d":
+                                case "t02n":
+                                    $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "t03d":
+                                case "t03n":
+                                    $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
+                                    $('#second_line').append('<div class="stormy"></div><div class="stormy"></div>');
+                                    break;
+                                case "t04d":
+                                case "t04n":
+                                    $('#first_line').append('<div class="stormy"></div><div class="rainy"></div><div class="stormy"></div>');
+                                    $('#second_line').append('<div class="stormy"></div><div class="stormy"></div>');
+                                    break;
+                                case "t05d":
+                                case "t05n":
+                                    $('#first_line').append('<div class="stormy"></div><div class="stormy"></div><div class="stormy"></div>');
+                                    $('#second_line').append('<div class="snowy"></div><div class="snowy"></div>');
+                                    break;
+                                case "d01d":
+                                case "d01n":
+                                    $('#first_line').append('<div class="cloudy"></div><div class="rainy"></div><div class="cloudy"></div>');
+                                    $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                    break;
+                                case "d02d":
+                                case "d02n":
+                                    $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "d03d":
+                                case "d03n":
+                                    $('#first_line').append('<div class="cloudy"></div><div class="rainy"></div><div class="cloudy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r01d":
+                                case "r01n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="cloudy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r02d":
+                                case "r02n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r03d":
+                                case "r03n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r04d":
+                                case "r04n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r05d":
+                                case "r05n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "r06d":
+                                case "r06n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="rainy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "f0qd":
+                                case "f01n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="snowy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="rainy"></div><div class="rainy"></div>');
+                                    break;
+                                case "s01d":
+                                case "s01n":
+                                    $('#first_line').append('<div class="snowy"></div><div class="cloudy"></div><div class="snowy"></div>');
+                                    break;
+                                case "s02d":
+                                case "s02n":
+                                    $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
+                                    break;
+                                case "s03d":
+                                case "s03n":
+                                    $('#first_line').append('<div class="snowy"></div><div class="snowy"></div><div class="snowy"></div>');
+                                    $('#second_line').append('<div class="snowy"></div><div class="snowy"></div>');
+                                    break;
+                                case "s04d":
+                                case "s04n":
+                                    $('#first_line').append('<div class="rainy"></div><div class="snowy"></div><div class="rainy"></div>');
+                                    $('#second_line').append('<div class="snowy"></div><div class="snowy"></div>');
+                                    break;
+                                case "s05d":
+                                case "s05n":
+                                    $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                    break;
+                                case "s06d":
+                                case "s06n":
+                                    $('#first_line').append('<div class="snowy"></div><div class="cloudy"></div><div class="snowy"></div>');
+                                    break;
+                                case "a01d":
+                                case "a02d":
+                                case "a03d":
+                                case "a04d":
+                                case "a05d":
+                                case "a06d":
+                                case "c02d":
+                                case "c03d":
+                                    $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                    $('#first_line').append('<div class="sunny"></div>');
+                                    break;
+                                case "a01n":
+                                case "a02n":
+                                case "a03n":
+                                case "a04n":
+                                case "a05n":
+                                case "a06n":
+                                case "c02n":
+                                case "c03n":
+                                    $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                    $('#second_line').append('<div class="starry"></div>');
+                                    break;
+                                case "c01d":
+                                    $('#first_line').append('</div><div class="sunny">');
+                                    $('#second_line').append('<div class="rainbow"></div><div class="rainbow"></div>');
+                                    break;
+                                case "c01n":
+                                    $('#second_line').append('<div class="starry"></div>');
+                                    break;
+                                case "c04d":
+                                case "c04n":
+                                    $('#first_line').append('<div class="cloudy"></div><div class="cloudy"></div><div class="cloudy"></div>');
+                                    $('#second_line').append('<div class="cloudy"></div><div class="cloudy"></div>');
+                                    break;
+                                case "u00d":
+                                case "u00n":
+                                    $('#first_line').append('<div class="rainbow"></div><div class="rainbow"></div><div class="rainbow"></div>');
+                                    $('#second_line').append('<div class="rainbow"></div><div class="rainbow"></div>');
+                                    break;
+                                default:
+                                    $('#first_line').append('<div class="rainbow"></div><div class="rainbow"></div><div class="rainbow"></div>');
+                                    $('#second_line').append('<div class="rainbow"></div><div class="rainbow"></div>');
+                                    break;
+                            }
+                            $('#icon').html(data.data[0].weather.description.toUpperCase());
+                            $('#temperature').html(data.data[0].temp + '&#8451');
+                            if(flag){
+                                $('#textarea_city').val(data.data[0].city_name);
+                            }
                         }
                     })
-                })
-            } else {
-                alert("Для работы сайта нужно разрешение геопозиции")
+                    .fail(function(){
+                        $('#icon').html("TRY AGAIN");
+                    })
             }
+            // if(navigator.geolocation){
+            //     navigator.geolocation.getCurrentPosition(function (position) {
+            //         x = position.coords.latitude;
+            //         y = position.coords.longitude;
+            //     })
+            // } else {
+            //     alert("Для работы сайта нужно разрешение геопозиции")
+            // }
         })
     })
 </script>
